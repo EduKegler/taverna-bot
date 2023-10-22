@@ -7,6 +7,12 @@ const GROUP_COMMAND = {
   type: 1,
 };
 
-const ALL_COMMANDS = [GROUP_COMMAND];
+const RANKING_COMMAND = {
+  name: "placar",
+  description: "Ranking Command",
+  type: 1,
+};
+
+const ALL_COMMANDS = [GROUP_COMMAND, RANKING_COMMAND];
 
 InstallGlobalCommands(process.env.APP_ID, ALL_COMMANDS);

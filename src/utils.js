@@ -20,18 +20,19 @@ export function VerifyDiscordRequest(clientKey) {
 export async function DiscordRequest(endpoint, options) {
   const url = "https://discord.com/api/v10/" + endpoint;
   if (options.body) options.body = JSON.stringify(options.body);
+  console.log(process.env.DISCORD_TOKEN);
   const res = await fetch(url, {
     headers: {
       Authorization: `Bot ${process.env.DISCORD_TOKEN}`,
       "Content-Type": "application/json; charset=UTF-8",
       "User-Agent":
-        "DiscordBot (https://github.com/discord/taverna-bot, 1.0.0)",
+        "TavernaBot (https://github.com/EduKegler/taverna-bot, 1.0.0)",
     },
     ...options,
   });
   if (!res.ok) {
     const data = await res.json();
-    console.log(res.status);
+    console.log(res);
     throw new Error(JSON.stringify(data));
   }
   return res;
@@ -56,7 +57,7 @@ function shuffleArray(arr) {
 }
 
 export function generateGroups() {
-  const newNames = shuffleArray(users.map((user) => user.id));
+  const newNames = shuffleArray(users);
   return [newNames.slice(0, 3), newNames.slice(3, 6)];
 }
 
