@@ -1,7 +1,6 @@
 import "dotenv/config";
 import express from "express";
 import {
-  VerifyDiscordRequest,
   generateGroups,
   getChampions,
 } from "./src/utils.js";
@@ -10,15 +9,15 @@ import {
   InteractionResponseType,
   MessageComponentTypes,
   ButtonStyleTypes,
+  verifyKeyMiddleware
 } from "discord-interactions";
 import fs from "fs";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-app.use(express.json({ verify: VerifyDiscordRequest(process.env.PUBLIC_KEY) }));
 
 let currentGame;
-app.post("/interactions", async function (req, res) {
+app.post("/interactions", verifyKeyMiddleware(process.env.PUBLIC_KEY), async function (req, res) {
   const { type, data } = req.body;
 
   if (type === InteractionType.APPLICATION_COMMAND) {
