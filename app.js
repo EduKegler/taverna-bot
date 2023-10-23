@@ -23,22 +23,23 @@ app.post("/interactions", verifyKeyMiddleware(process.env.PUBLIC_KEY), async fun
   if (type === InteractionType.APPLICATION_COMMAND) {
     const { name } = data;
     if (name === "group") {
-      const [names1, names2] = generateGroups();
-      const [champions1, champions2] = getChampions();
 
       if (currentGame) {
         return res.send({
           type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-          data: { content: "Já tem um jogo em andamento", dele },
+          data: { content: "Já tem um jogo em andamento" },
         });
       }
+
+      const [names1, names2] = generateGroups();
+      const [champions1, champions2] = getChampions();
 
       currentGame = {
         team1: names1.map((user) => user.name),
         team2: names2.map((user) => user.name),
       };
 
-      return res.send({
+      const id = res.send({
         type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
         data: {
           content: `
@@ -75,6 +76,7 @@ Quem ganhou? \n`,
           ],
         },
       });
+      return
     }
 
     if (name === "placar") {
@@ -104,7 +106,6 @@ Quem ganhou? \n`,
       }
       const file = fs.readFileSync("./ranking.json");
       const data = JSON.parse(file);
-      console.log(currentGame);
       const newScore = {
         totalMatches: data.totalMatches + 1,
         ranking: data.ranking.map((user) =>
@@ -114,7 +115,6 @@ Quem ganhou? \n`,
         ),
       };
 
-      console.log(newScore, JSON.stringify(newScore));
       fs.writeFileSync("./ranking.json", JSON.stringify(newScore));
       currentGame = undefined;
       return res.send({
