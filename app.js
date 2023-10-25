@@ -11,13 +11,28 @@ import {
   ButtonStyleTypes,
   verifyKeyMiddleware
 } from "discord-interactions";
-import fs from "fs";
+import pg from 'pg'
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 let currentGame;
+
+const client = new pg.Client({
+  ssl: true
+})
+
 app.post("/interactions", verifyKeyMiddleware(process.env.PUBLIC_KEY), async function (req, res) {
+  try {
+    await client.connect()
+    return res.send({
+      type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+      data: { content: "Connectando ao BD" },
+    });
+  } catch(e) {
+    console.log('Already connected')
+  }
+
   const { type, data } = req.body;
 
   if (type === InteractionType.APPLICATION_COMMAND) {
@@ -80,8 +95,8 @@ Quem ganhou? \n`,
     }
 
     if (name === "placar") {
-      const file = fs.readFileSync("./ranking.json");
-      const data = JSON.parse(file);
+      const query = await client.query('select * from users')
+      const data = query.rows;
       return res.send({
         type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
         data: {
@@ -104,18 +119,20 @@ Quem ganhou? \n`,
           },
         });
       }
-      const file = fs.readFileSync("./ranking.json");
-      const data = JSON.parse(file);
-      const newScore = {
-        totalMatches: data.totalMatches + 1,
-        ranking: data.ranking.map((user) =>
-          currentGame[isT1Winner ? "team1" : "team2"].includes(user.name)
+
+    
+      const query = await client.query('select * from users')
+      const data = query.rows;
+      
+      const newScore = data.map((user) =>
+          currentGame[isT1Winner ? "team1" : "team2"].includes(user.name) || user.name === 'Total'
             ? { name: user.name, score: user.score + 1 }
             : user
-        ),
-      };
+      )
+      newScore.forEach(async (score) => { 
+        await client.query('update users set score = $1 where name = $2', [score.score, score.name])
+      })
 
-      fs.writeFileSync("./ranking.json", JSON.stringify(newScore));
       currentGame = undefined;
       return res.send({
         type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
@@ -132,8 +149,8 @@ Quem ganhou? \n`,
           data: { content: "O valor desse jogo já foi computado" },
         });
       }
-      const file = fs.readFileSync("./ranking.json");
-      const data = JSON.parse(file);
+      const query = await client.query('select * from users')
+      const data = query.rows;
       currentGame = undefined;
       return res.send({
         type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
@@ -146,9 +163,10 @@ Quem ganhou? \n`,
 });
 
 const printRanking = (data) => {
-  const list = data.ranking.sort((a, b) => b.score - a.score);
+  const totalMatches = data.find(d => d.name === 'Total')
+  const list = data.filter(d => d.name !== 'Total').sort((a, b) => b.score - a.score);
   return `
-  Placar - Total de Jogos **${data.totalMatches}**\`\`\`${list
+  Placar - Total de Jogos **${totalMatches.score}**\`\`\`${list
     .map((user) => `${user.name} - ${user.score}`)
     .join("\n")}\`\`\`
   `;
