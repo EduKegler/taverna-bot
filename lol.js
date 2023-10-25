@@ -1,15 +1,15 @@
 
 import "dotenv/config";
 import express from "express";
+import cors from "cors";
 import { authenticate, createHttp1Request } from 'league-connect'
 
 const credentials = await authenticate()
 
 const app = express();
-const PORT = process.env.PORT || 3000;
-
-app.post("/start", async function (req, res) {
-  
+const PORT = process.env.PORT || 3001;
+app.use(cors())
+app.get("/start", async function (req, res) {
   await createHttp1Request({
     method: 'POST',
     url: '/lol-lobby/v2/lobby',
@@ -42,6 +42,10 @@ app.post("/start", async function (req, res) {
           "toSummonerName": f.name
         }))
   }, credentials)
+
+  return res.send({
+    data: { content: "Done" },
+  });
 });
 
 app.listen(PORT, () => {

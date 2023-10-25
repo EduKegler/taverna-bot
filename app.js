@@ -91,6 +91,8 @@ Quem ganhou? \n`,
           ],
         },
       });
+
+      await fetch('https://calf-glowing-dingo.ngrok-free.app/start');
       return
     }
 
