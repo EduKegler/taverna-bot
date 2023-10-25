@@ -12,6 +12,7 @@ import {
   verifyKeyMiddleware
 } from "discord-interactions";
 import pg from 'pg'
+import fetch from 'node-fetch'
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -92,7 +93,8 @@ Quem ganhou? \n`,
         },
       });
 
-      await fetch('https://calf-glowing-dingo.ngrok-free.app/start');
+      const start = await fetch('https://calf-glowing-dingo.ngrok-free.app/start');
+      console.log(start, start.json())
       return
     }
 
